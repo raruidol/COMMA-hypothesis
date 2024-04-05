@@ -2,3 +2,5 @@ scikit-learn
 sentence_transformers
 numpy
 datasets
+evaluate
+accelerate

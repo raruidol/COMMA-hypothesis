@@ -57,7 +57,7 @@ def load_model():
 
 
 def load_local_model(path):
-    tokenizer_hf = AutoTokenizer.from_pretrained('')
+    tokenizer_hf = AutoTokenizer.from_pretrained(path)
     model = AutoModelForSequenceClassification.from_pretrained(path)
 
     return tokenizer_hf, model
@@ -80,8 +80,8 @@ def train_model(mdl, tknz, data):
         save_total_limit=2,
         learning_rate=1e-5,
         weight_decay=0.01,
-        per_device_train_batch_size=42,
-        per_device_eval_batch_size=42,
+        per_device_train_batch_size=32,
+        per_device_eval_batch_size=32,
         num_train_epochs=15,
         load_best_model_at_end=True,
         metric_for_best_model="f1",
@@ -154,8 +154,8 @@ if __name__ == "__main__":
         test_predictions = trainer.predict(tokenized_data['test'])
         test_predict = np.argmax(test_predictions.predictions, axis=-1)
 
-        mf1_dev = f1_score(tokenized_data['dev']['label'], dev_predict, average='macro')
-        mf1_test = f1_score(tokenized_data['test']['label'], test_predict, average='macro')
+        mf1_dev = precision_recall_fscore_support(tokenized_data['dev']['label'], dev_predict, average='macro')
+        mf1_test = precision_recall_fscore_support(tokenized_data['test']['label'], test_predict, average='macro')
 
         print('Macro F1 score in DEV:', mf1_dev, 'TEST:', mf1_test)
         print('Confusion matrix:')
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     else:
 
-        path_model = 'models/'
+        path_model = 'models/checkpoint-240'
 
         tknz, mdl = load_local_model(path_model)
 
