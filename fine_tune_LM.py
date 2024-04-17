@@ -4,7 +4,8 @@ from datasets import Dataset, DatasetDict
 from sklearn.metrics import f1_score, confusion_matrix, precision_recall_fscore_support
 import json, evaluate
 import numpy as np
-
+import argparse
+import os
 
 def load_dataset(path):
     data = {'train': {}, 'dev': {}, 'test': {}}
@@ -49,10 +50,12 @@ def tokenize_sequence(samples):
 
 
 def load_model():
-    tokenizer_hf = AutoTokenizer.from_pretrained('roberta-large')
-    model = AutoModelForSequenceClassification.from_pretrained('roberta-large', num_labels=2,
+    # tokenizer_hf = AutoTokenizer.from_pretrained('roberta-large')
+    # model = AutoModelForSequenceClassification.from_pretrained('roberta-large', num_labels=2,
+    #                                                                ignore_mismatched_sizes=True)
+    tokenizer_hf = AutoTokenizer.from_pretrained('roberta-base')
+    model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=2,
                                                                    ignore_mismatched_sizes=True)
-
     return tokenizer_hf, model
 
 
@@ -105,10 +108,21 @@ def train_model(mdl, tknz, data):
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description="Pick a dataset")
+    parser.add_argument("--data", type=str, default='argument', required=True, help="Which version of the data to use")
+    # parser.add_argument("--size", type=int, default=256, required=False, help="max_split_size for pytorch cuda allocation")
+    args = parser.parse_args()
+
+    # os.environ["PYTORCH_CUDA_ALLOC_CONF"] = f"max_split_size_mb:{args.size}"
+    # print(f"max_split_size_mb:{args.size}")
+
+
     PRETRAIN = True
     CONTINUE = False
 
-    data_path = 'data_split/argument_hypothesis.json'
+    # data_path = 'data_split/combined_hypothesis.json'
+    data_path = f"data_split/{args.data}_hypothesis.json"
+    print("DATA: ", data_path)
 
     # LOAD DATA FOR THE MODEL
     dataset = load_dataset(data_path)
@@ -116,6 +130,7 @@ if __name__ == "__main__":
     shuffled_dataset = dataset.shuffle(seed=42)
 
     if CONTINUE:
+        print("Loading pre-trained.")
         # LOAD PRE_TRAINED MODEL
         model_path = ''
         tknz, mdl = load_local_model(model_path)
@@ -138,7 +153,7 @@ if __name__ == "__main__":
         print('Macro F1 score in DEV:', mf1_dev, 'TEST:', mf1_test)
 
     elif PRETRAIN:
-
+        print("Pretraining.")
         # LOAD PRE_TRAINED LLM
         tknz, mdl = load_model()
 
@@ -157,12 +172,12 @@ if __name__ == "__main__":
         mf1_dev = precision_recall_fscore_support(tokenized_data['dev']['label'], dev_predict, average='macro')
         mf1_test = precision_recall_fscore_support(tokenized_data['test']['label'], test_predict, average='macro')
 
-        print('Macro F1 score in DEV:', mf1_dev, 'TEST:', mf1_test)
+        print('Macro F1 score in \n\tDEV:', mf1_dev, '\n\tTEST:', mf1_test)
         print('Confusion matrix:')
         print(confusion_matrix(tokenized_data['test']['label'], test_predict))
 
     else:
-
+        print("Using checkpoint.")
         path_model = 'models/checkpoint-240'
 
         tknz, mdl = load_local_model(path_model)

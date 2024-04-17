@@ -1,0 +1,10 @@
+scikit-learn==1.2.0
+sentence_transformers
+numpy==1.23.5
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+datasets==2.7.1
+evaluate
+accelerate==0.20.3
